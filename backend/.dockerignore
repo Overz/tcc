@@ -1,0 +1,11 @@
+.*
+*.yaml
+jest.config.ts
+node_modules
+build
+dist
+coverage
+LICENSE
+Dockerfile*
+*.md
+!.npmrc

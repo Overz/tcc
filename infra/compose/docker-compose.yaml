@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:latest
+    restart: always
+    hostname: nginx-srv
+    container_name: tcc-nginx-container
+    volumes:
+      - ./infra/compose/nginx/nginx.crt:/etc/nginx/nginx-selfsigned.crt
+      - ./infra/compose/nginx/nginx.key:/etc/nginx/nginx-selfsigned.key
+      - ./infra/compose/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./infra/compose/nginx/conf.d:/etc/nginx/conf.d/
+      - nginx:/etc/nginx
+    links:
+      - backend
+    ports:
+      - 80:80
+      - 443:443
+    expose:
+      - 80
+      - 443
+    networks:
+      tcc:
+
+  mysql:
+    image: mysql:latest
+    restart: always
+    hostname: mysql-srv
+    container_name: tcc-mysql-container
+    env_file:
+      - './infra/compose/tcc.env'
+    ports:
+      - 3306:3306
+    expose:
+      - 3306
+    volumes:
+      - mysql:/data/mysql
+    networks:
+      tcc:
+    command: ['--default-authentication-plugin=mysql_native_password']
+
+  minio:
+    image: minio/minio:latest
+    hostname: minio-srv
+    restart: always
+    container_name: tcc-minio-container
+    volumes:
+      - minio:/data/minio
+    env_file:
+      - './infra/compose/tcc.env'
+    ports:
+      - 9000:9000
+    expose:
+      - 9000
+    networks:
+      tcc:
+    command: ['server', '/data/minio']
+
+  adminer:
+    image: adminer:latest
+    restart: always
+    hostname: adminer-srv
+    container_name: tcc-adminer-container
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql-srv
+    ports:
+      - 8080:8080
+    expose:
+      - 8080
+    networks:
+      tcc:
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    hostname: backend-srv
+    restart: always
+    container_name: backend-container
+    env_file:
+      - './infra/compose/tcc.env'
+    ports:
+      - 3000
+    depends_on:
+      - mysql
+      - minio
+    networks:
+      tcc:
+
+networks:
+  tcc:
+    name: tcc
+
+volumes:
+  minio:
+    name: tcc-minio
+  mysql:
+    name: tcc-mysql
+  nginx:
+    name: tcc-nginx

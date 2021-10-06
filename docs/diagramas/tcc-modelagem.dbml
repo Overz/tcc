@@ -1,0 +1,89 @@
+// <: one-to-many. E.g: users.id < posts.user_id
+// >: many-to-one. E.g: posts.user_id > users.id
+// -: one-to-one. E.g: users.id - user_infos.user_id
+
+Table Usuario {
+  cdUsuario integer [pk, not null]
+  deEmail varchar(255) [not null, unique]
+  deSenha text [not null]
+  nmNome text [not null]
+  nuCpf varchar(14) [not null, unique]
+  nuTelefone varchar(11) [not null, unique]
+  deSobre text [null, note: 'Uma descrição do usuario e suas experiências']
+  deToken text [null, note: 'Token utilizado na ativação da conta']
+  dePicture text [null, note: 'URI utilizada para salvar uma foto do usuario, se uma/duas primeiras letras do nome/sobrenome']
+  dtCriacao date [not null, note: 'Data de criação ']
+} 
+
+// Trabalhos publicados/consumidos
+Table Trampo {
+  cdTrampo integer [pk, not null]
+  cdEndereco integer [null, ref: > Endereco.cdEndereco, note: 'Utilizado para filtragem e cadastros']
+  cdContratante integer [not null, ref: > Usuario.cdUsuario]
+  cdContratado integer [null, ref: > Usuario.cdUsuario]
+  nmGrupo text [not null, note: 'Grupo de trabalho (Topico)']
+  nmAreaTrabalho text [not null, note: 'Area de trabalho (Subtopico)']
+  flTipo char(1) [not null, note: 'P(Presencial), O(Online)']
+  vlRemuneracao text [not null, note: 'Valor para receber, intermanete ou externamente']
+  dtEntrega date [not null, note: 'Cadastrar uma data de entrega caso exista']
+  deDescricao text [not null, note: 'Descricao das atividades do trabalho'] 
+  flStatus char(1) [not null, note: 'Status do tr abalho, F(Finalizado), C(Cancelado), P(Pendente)']
+  dtPublicado date [not null, note: 'Data de publicação do trabalho']
+  dtValidate date [not null, note: 'Data de validade de 7 dias para o cancelamento']
+  flFinalizacaoPendente char(1) [not null, note: 'A(Andamento), N(Nao), S(Sim)']
+}
+
+// Pode conter muitos endereços
+Table Endereco {
+  cdEndereco integer [pk, not null]
+  cdUsuario integer [not null, ref: > Usuario.cdUsuario]
+  nuCep text [not null, note: 'CEP']
+  nmBairro text [null, note: 'Bairro']
+  nmRua text [not null, note: 'Rua']
+  nmCidade text [not null, note: 'Cidade']
+  sgEstado text [not null, note: 'Estado em UF: SC, SP, AM, etc...']
+  nmPais text [not null, note: 'Pais, padrão Brasil']
+  deNome text [not null, note: 'Nome que o usuario escolhe para exibição para facilitar busca, ex: Casa, Trabalho']
+  nuNumero text [not null, note: 'Numero do estabelecimento']
+  nuLatitude text [not null, note: 'Latitude salva pela API integrada do expo de geolocalização']
+  nuLongitude text [not null, note: 'Longitude salva pela API integrada do expo de geolocalização']
+}
+
+// Dados da avaliação do usuario
+Table Avaliacao {
+  cdAvaliacao integer [pk, not null]
+  cdUsuario integer [not null, ref: - Usuario.cdUsuario]
+  nuNota integer [not null, note: 'Número da avaliação, 0 a 5']
+  nuQntdAvaliacao integer [not null, note: 'Quantidade de usuarios que avaliaram']
+  flElogio char(1) [not null, note: 'Tipo do elogio']
+  nuElogio integer [not null, note: 'Quantidade de elogios']
+  nuTotalTrampos integer [not null, note: 'Quantidade de trabalhos completados']       
+}
+
+Table Candidatos {
+  cdCandidato integer [pk, not null, note: 'Usuario']
+  cdTrampo integer [pk, null, ref: > Trampo.cdTrampo]
+}
+
+// Usuario pode ser denunciado
+Table Denuncia {
+  cdDenuncia integer [pk, not null]
+  cdUsuario integer [not null, ref: > Usuario.cdUsuario]
+  deMsg text [not null, note: 'Descricao do problema']
+}
+ 
+// Muitos usuarios para muitas notificações ?
+Table Notificacao {
+  cdNotificacao integer [pk, not null]
+  cdUsuario integer [not null, ref: > Usuario.cdUsuario] 
+  deMensagem text [not null, note: 'Descricao da notificação']
+  flVisto char(1) [not null, note: 'S(Sim), N(Nao). Indica se a notificação recebida já foi vista, serve para efeito visual']
+} 
+
+// Table Chat {
+//   cdChat integer [pk, not null]
+//   cdUsuario integer [not null, ref: > Usuario.cdUsuario]
+//   flVisto boolean [not null, note: 'Se a msg for vista, notificara quem enviou']
+//   dtMsg date [not null, note: 'Data de envio da mensagem']
+//   deMsg text [not null, note: 'Mensagem enviada criptografada']
+// }
